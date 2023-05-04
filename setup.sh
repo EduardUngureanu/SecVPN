@@ -23,29 +23,31 @@ function echo_warn
 
 function help
 {
-    echo 'Options: [-d <tapname>] [-a <tapIP>] [-c <serverIP>] [-p <port>] [-N] [-R] [-h]'
-    echo '    -d <tapname>  : specify the name of the tap interface that will be created'
-    echo '                    (default = 192.168.60.1/24 for server and 192.168.60.2/24 for client)'
-    echo '    -a <tapIP>    : specify the IP of the tap interface that will be created'
-    echo '                    (default = tap50 for server and tap51 for client)'
-    echo '    -c <serverIP> : run in client mode and specify the IP of the server to connect to'
-    echo '                    (default = 10.0.0.1/24)'
-    echo '    -p <port>     : specify the port on which to opperate'
-    echo '                    (default = 55555)'
-    echo '    -N            : create a new tap interface instead of using an existing one, must run as root'
-    echo '    -R            : run the VPN app with the provided options'
-    echo '    -h            : show this list'
+    echo 'Options: [-d <tapname>] [-a <tapIP>] [-n <networkIP>] [-c <serverIP>] [-N] [-h]'
+    echo '    -d <tapname>   : specify the name of the tap interface that will be created'
+    echo '                     (default = tap50 for server and tap51 for client)'
+    echo '    -a <tapIP>     : specify the IP of the tap interface that will be created'
+    echo '                     (default = 10.0.8.1/24 for server and 10.0.8.2/24 for client)'
+    echo '    -c <serverIP>  : run in client mode and specify the IP of the server to connect to'
+    echo '                     (default = 10.0.8.1/24)'
+    echo '    -n <networkIP> : specify the IP of the network which will be routed to the tap interface'
+    echo '                     (default = 10.0.8.0/24)'
+    echo '    -N             : create a new tap interface instead of using an existing one, must run as root'
+    echo '    -h             : show this list'
 }
+
+if [[ $EUID -ne 0 ]]; then
+    echo_error 'Script mush run as root'
+fi
 
 tap_name=0
 tap_addr=0
 client_mode=0
 new_interface=0
-start_vpn=0
-port=0
 srv_addr=0
+network_ip=0
 
-while getopts d:a:c:p:Nh flag
+while getopts d:a:n:c:Nh flag
 do
     case '${flag}' in
         d)
@@ -56,21 +58,17 @@ do
         tap_addr=${OPTARG}
         ;;
 
+        n)
+        network_ip=${OPTARG}
+        ;;
+
         c)
         client_mode=1
         srv_addr=${OPTARG}
         ;;
 
-        p)
-        port=${OPTARG}
-        ;;
-
         N)
         new_interface=1
-        ;;
-
-        R)
-        start_vpn=1
         ;;
 
         h)
@@ -99,7 +97,7 @@ if [[ $client_mode == 0 ]]; then
     fi
 
     if [[ $tap_addr == 0 ]]; then
-        tap_addr='192.168.60.1/24'
+        tap_addr='10.0.8.1/24'
         echo_warn 'No tap address provided, using default ' $tap_addr
     fi
 else
@@ -111,26 +109,17 @@ else
     fi
 
     if [[ $tap_addr == 0 ]]; then
-        tap_addr='192.168.60.2/24'
+        tap_addr='10.0.8.2/24'
         echo_warn 'No tap address provided, using default ' $tap_addr
     fi
 
     if [[ $server_addr == 0 ]]; then
-        server_addr='10.0.0.1/24'
+        server_addr='10.0.8.1/24'
         echo_warn 'No server address provided, using default ' $server_addr
     fi
 fi
 
-if [[ $port == 0 ]]; then
-    port='55555'
-    echo_warn 'No port provided, using default ' $port
-fi
-
 if [[ $new_interface == 1 ]]; then
-    if [[ $EUID -ne 0 ]]; then
-        echo_error 'Must run as root when creating interfaces'
-    fi
-
     ip tuntap add $tap_name mode tap || echo_error 'Failed to create tap interface, perhaps it already exists?'
     ip addr add $tap_addr dev $tap_name || echo_error 'Failed to add address to tap interface, interface may already have this address configured'
     ip link set $tap_name up || echo_error 'Failed to enable tap interface'
@@ -138,6 +127,9 @@ if [[ $new_interface == 1 ]]; then
     echo_warn 'Created new interface ' $tap_name ' on address ' $tap_addr ' and enabled it'
 fi
 
-if [[ $start_vpn == 1 ]]; then
-    echo 'Starting VPN...'
+if [[ $network_ip == 0 ]]; then
+    network_ip='10.0.8.0/24'
+    echo_warn 'No network IP provided, using default ' $network_ip
 fi
+
+route add -net $network_ip $tap_name || echo_warn 'Failed to route trafic from ' $network_ip ' to ' $tap_name ', routing rule may aready exist'

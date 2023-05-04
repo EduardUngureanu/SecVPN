@@ -43,3 +43,80 @@ int tap_alloc(char *dev) {
 
     return fd;
 }
+
+// Initialize a server socket
+int initServer(int port_number) {
+
+    int sockfd;
+    struct sockaddr_in host;
+    int optval = 1;
+
+    if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&optval, sizeof(optval)) < 0) {
+        perror("setsockopt()");
+        exit(1);
+    }
+
+    memset(&host, 0, sizeof(host));
+    host.sin_family = AF_INET;
+    host.sin_addr.s_addr = htonl(INADDR_ANY);
+    host.sin_port = htons(port_number);
+
+    // using datagram, may need to use stream
+    if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        perror("socket()");
+        exit(1);
+    }
+
+    if(bind(sockfd, (struct sockaddr *)&host, sizeof(host)) < 0) {
+        perror("bind()");
+        exit(1);
+    }
+
+    return sockfd;
+}
+
+// Create a socket connection to a server
+int connectToServer(char *server_IP, int port_number) {
+
+    int sockfd;
+    struct sockaddr_in remote;
+
+    // destination socket
+    memset (&remote, 0, sizeof(remote));
+    remote.sin_family = AF_INET;
+    remote.sin_addr.s_addr = inet_addr(server_IP);
+    remote.sin_port = htons(port_number);
+
+    if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        perror("socket()");
+        exit(1);
+    }
+
+    if (connect(sockfd, (struct sockaddr*) &remote, sizeof(remote)) < 0) {
+        perror("connect()");
+        exit(1);
+    }
+
+    printf("CLIENT: Connected to server %s\n", inet_ntoa(remote.sin_addr));
+
+    return sockfd;
+}
+
+// Return the file descriptor of the connection
+int waitForConnection(int sockfd) {
+
+    int netfd;
+    struct sockaddr_in client;
+    socklen_t clientlen;
+
+    clientlen = sizeof(client);
+    memset(&client, 0, clientlen);
+    if ((netfd = accept(sockfd, (struct sockaddr*)&client, &clientlen)) < 0) {
+        perror("accept()");
+        exit(1);
+    }
+
+    printf("SERVER: Client connected from %s\n", inet_ntoa(client.sin_addr));
+
+    return netfd;
+}

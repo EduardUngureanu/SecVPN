@@ -10,61 +10,6 @@
 #define CLIENT 0
 #define SERVER 1
 
-
-
-// Return current state of port forward
-int check_port_forward_state() {
-    FILE *fp = popen("sysctl net.ipv4.ip_forward", "r");
-
-    fseek(fp, 0L, SEEK_END);
-    int lSize = ftell(fp);
-    rewind(fp);
-    
-    char *buffer;
-    buffer = calloc(1, lSize+1);
-
-    fread(buffer, lSize, 1, fp);
-
-    char *tok = strtok(buffer, "=");
-    tok = strtok(NULL, " ");
-
-    int state = atoi(tok);
-
-    pclose(fp);
-
-    return state;
-}
-
-// Create and return tap device
-int tap_alloc(char *dev) {
-    struct ifreq ifr;
-    int fd, err;
-    char *clonedev = "/dev/net/tun";
-
-    if((fd = open(clonedev, O_RDWR)) < 0) {
-        perror("Opening /dev/net/tun");
-        return fd;
-    }
-
-    memset(&ifr, 0, sizeof(ifr));
-
-    ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
-
-    if (*dev) {
-        strncpy(ifr.ifr_name, dev, IFNAMSIZ);
-    }
-
-    if((err = ioctl(fd, TUNSETIFF, (void *)&ifr)) < 0) {
-        perror("ioctl(TUNSETIFF)");
-        close(fd);
-        return err;
-    }
-
-    strcpy(dev, ifr.ifr_name);
-
-    return fd;
-}
-
 // Configure the tap device with the the given name
 int tap_config(char *dev, char *addr, int mtu) {
     system("ip link set tun11 up");

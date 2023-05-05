@@ -32,7 +32,7 @@ function help
     echo '                     (default = 10.0.8.1/24)'
     echo '    -n <networkIP> : specify the IP of the network which will be routed to the tap interface'
     echo '                     (default = 10.0.8.0/24)'
-    echo '    -N             : create a new tap interface instead of using an existing one, must run as root'
+    echo '    -N             : create a new tap interface instead of configuring an existing one, must run as root'
     echo '    -h             : show this list'
 }
 

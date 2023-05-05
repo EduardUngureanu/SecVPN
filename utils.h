@@ -20,7 +20,7 @@ int tap_alloc(char *dev) {
     int fd, err;
     char *clonedev = "/dev/net/tun";
 
-    if((fd = open(clonedev, O_RDWR)) < 0) {
+    if ((fd = open(clonedev, O_RDWR)) < 0) {
         perror("Opening /dev/net/tun");
         return fd;
     }
@@ -33,7 +33,7 @@ int tap_alloc(char *dev) {
         strncpy(ifr.ifr_name, dev, IFNAMSIZ);
     }
 
-    if((err = ioctl(fd, TUNSETIFF, (void *)&ifr)) < 0) {
+    if ((err = ioctl(fd, TUNSETIFF, (void *)&ifr)) < 0) {
         perror("ioctl(TUNSETIFF)");
         close(fd);
         return err;
@@ -51,7 +51,7 @@ int initServer(int port_number) {
     struct sockaddr_in host;
     int optval = 1;
 
-    if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&optval, sizeof(optval)) < 0) {
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&optval, sizeof(optval)) < 0) {
         perror("setsockopt()");
         exit(1);
     }
@@ -62,12 +62,12 @@ int initServer(int port_number) {
     host.sin_port = htons(port_number);
 
     // using datagram, may need to use stream
-    if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         perror("socket()");
         exit(1);
     }
 
-    if(bind(sockfd, (struct sockaddr *)&host, sizeof(host)) < 0) {
+    if (bind(sockfd, (struct sockaddr *)&host, sizeof(host)) < 0) {
         perror("bind()");
         exit(1);
     }
@@ -87,7 +87,7 @@ int connectToServer(char *server_IP, int port_number) {
     remote.sin_addr.s_addr = inet_addr(server_IP);
     remote.sin_port = htons(port_number);
 
-    if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         perror("socket()");
         exit(1);
     }

@@ -1,15 +1,68 @@
 #include <utils.h>
+#include <getopt.h>
 
 #define BUFF_SIZE 2000
 #define PORT_NUMBER 55555
 #define SERVER_IP "10.0.8.1"
+#define SERVER_DEV "tap50"
+#define CLIENT_DEV "tap51"
+
+#define SERVER 0
+#define CLIENT 1
 
 int main(int argc, char *argv[]) {
 
-    int tunfd, sockfd; // set them using the fucntions
+    int tapfd, sockfd;
+    char if_name[IFNAMSIZ] = "";
+    char server_ip[16] = SERVER_IP;
+    unsigned short int port = PORT_NUMBER;
+    int mode = -1;
 
-    // select max descriptor
-    int maxfd = (tunfd > sockfd) ? tunfd : sockfd;
+    int option;
+    while ((option = getopt(argc, argv, "sc:p:i:")) > 0)
+    {
+        switch(option) {
+            case 's':
+                mode = SERVER;
+                break;
+
+            case 'c':
+                mode = CLIENT;
+                strncpy(server_ip, optarg, 15);
+                break;
+
+            case 'p':
+                port = atoi(optarg);
+                break;
+
+            case 'i':
+                strncpy(if_name, optarg, IFNAMSIZ-1);
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    printf("Starting in %s mode...", (mode == 0) ? "server" : "client");
+
+    if (*if_name == '\0') {
+        if (mode == 0) {
+            strncpy(if_name, SERVER_DEV, IFNAMSIZ-1);
+        } else {
+            strncpy(if_name, CLIENT_DEV, IFNAMSIZ-1);
+        }
+        printf("No interface name provided, using default %s", if_name);
+    }
+
+    if ((tapfd = tap_alloc(if_name)) < 0 ) {
+        exit(1);
+    }
+
+    // socket creation goes here
+
+    // get max descriptor
+    int maxfd = (tapfd > sockfd) ? tapfd : sockfd;
 
     while (1) {
         fd_set readFDSet;
@@ -17,7 +70,7 @@ int main(int argc, char *argv[]) {
 
         FD_ZERO(&readFDSet);
         FD_SET(sockfd, &readFDSet);
-        FD_SET(tunfd, &readFDSet);
+        FD_SET(tapfd, &readFDSet);
 
         ret = select(maxfd, &readFDSet, NULL, NULL, NULL);
 
@@ -34,7 +87,7 @@ int main(int argc, char *argv[]) {
             // read from sockfd, write to tunfd
         }
 
-        if(FD_ISSET(tunfd, &readFDSet)) {
+        if(FD_ISSET(tapfd, &readFDSet)) {
             // read from tunfd, write to sockfd
 
             int len;

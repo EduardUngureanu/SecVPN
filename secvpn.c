@@ -42,8 +42,16 @@ int main(int argc, char *argv[]) {
                 break;
 
             default:
+                printf("Unknown argument %s", option);
+                exit(1);
                 break;
         }
+    }
+
+    if (mode == -1)
+    {
+        printf("SERVER (-s) or CLIENT (-c) mode must be specified");
+        exit(1);
     }
 
     printf("Starting in %s mode...", (mode == SERVER) ? "server" : "client");

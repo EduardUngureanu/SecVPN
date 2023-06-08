@@ -1,5 +1,7 @@
-#include <utils.h>
 #include <getopt.h>
+#include <syslog.h>
+
+#include <utils.h>
 
 #define BUFF_SIZE 2000
 #define PORT_NUMBER 55555
@@ -11,6 +13,9 @@
 #define CLIENT 1
 
 int main(int argc, char *argv[]) {
+
+    // Start logging to syslog and stderr
+    openlog("secvpn", LOG_PID | LOG_NDELAY | LOG_PERROR, LOG_DAEMON);
 
     int tapfd, sockfd, netfd;
     char if_name[IFNAMSIZ] = "";

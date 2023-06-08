@@ -17,12 +17,12 @@
 
 int tap_alloc(char *dev) {
     struct ifreq ifr;
-    int fd, err;
+    int tapfd, err;
     char *clonedev = "/dev/net/tun";
 
-    if ((fd = open(clonedev, O_RDWR)) < 0) {
+    if ((tapfd = open(clonedev, O_RDWR)) < 0) {
         perror("Opening /dev/net/tun");
-        return fd;
+        return tapfd;
     }
 
     memset(&ifr, 0, sizeof(ifr));
@@ -33,15 +33,15 @@ int tap_alloc(char *dev) {
         strncpy(ifr.ifr_name, dev, IFNAMSIZ);
     }
 
-    if ((err = ioctl(fd, TUNSETIFF, (void *)&ifr)) < 0) {
+    if ((err = ioctl(tapfd, TUNSETIFF, (void *)&ifr)) < 0) {
         perror("ioctl(TUNSETIFF)");
-        close(fd);
+        close(tapfd);
         return err;
     }
 
     strcpy(dev, ifr.ifr_name);
 
-    return fd;
+    return tapfd;
 }
 
 // Initialize a server socket

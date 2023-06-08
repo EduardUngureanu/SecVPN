@@ -15,38 +15,6 @@
 #include <errno.h>
 #include <stdarg.h>
 
-int tap_alloc(char *dev)
-{
-    struct ifreq ifr;
-    int tapfd, err;
-    char *clonedev = "/dev/net/tun";
-
-    if ((tapfd = open(clonedev, O_RDWR)) < 0)
-    {
-        perror("Opening /dev/net/tun");
-        return tapfd;
-    }
-
-    memset(&ifr, 0, sizeof(ifr));
-
-    ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
-
-    if (*dev) {
-        strncpy(ifr.ifr_name, dev, IFNAMSIZ);
-    }
-
-    if ((err = ioctl(tapfd, TUNSETIFF, (void *)&ifr)) < 0)
-    {
-        perror("ioctl(TUNSETIFF)");
-        close(tapfd);
-        return err;
-    }
-
-    strcpy(dev, ifr.ifr_name);
-
-    return tapfd;
-}
-
 // Initialize a server socket
 int initServerSock(unsigned short int port_number)
 {

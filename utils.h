@@ -45,7 +45,7 @@ int tap_alloc(char *dev) {
 }
 
 // Initialize a server socket
-int initServer(int port_number) {
+int initServerSock(unsigned short int port_number) {
 
     int sockfd;
     struct sockaddr_in host;
@@ -76,7 +76,7 @@ int initServer(int port_number) {
 }
 
 // Create a socket connection to a server
-int connectToServer(char *server_IP, int port_number) {
+int connectToServer(char *server_IP, unsigned short int port_number) {
 
     int sockfd;
     struct sockaddr_in remote;

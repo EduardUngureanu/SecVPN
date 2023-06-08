@@ -12,16 +12,18 @@
 
 int main(int argc, char *argv[]) {
 
-    int tapfd, sockfd;
+    int tapfd, sockfd, netfd;
     char if_name[IFNAMSIZ] = "";
     char server_ip[16] = SERVER_IP;
     unsigned short int port = PORT_NUMBER;
     int mode = -1;
 
+    // run arguments
     int option;
     while ((option = getopt(argc, argv, "sc:p:i:")) > 0)
     {
-        switch(option) {
+        switch(option)
+        {
             case 's':
                 mode = SERVER;
                 break;
@@ -44,27 +46,50 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printf("Starting in %s mode...", (mode == 0) ? "server" : "client");
+    printf("Starting in %s mode...", (mode == SERVER) ? "server" : "client");
 
-    if (*if_name == '\0') {
-        if (mode == 0) {
+    // tap interface name handling
+    if (*if_name == '\0')
+    {
+        if (mode == SERVER)
+        {
             strncpy(if_name, SERVER_DEV, IFNAMSIZ-1);
-        } else {
+        }
+        else
+        {
             strncpy(if_name, CLIENT_DEV, IFNAMSIZ-1);
         }
+    } else
+    {
         printf("No interface name provided, using default %s", if_name);
     }
 
-    if ((tapfd = tap_alloc(if_name)) < 0 ) {
+    // tap interface creation
+    if ((tapfd = tap_alloc(if_name)) < 0 )
+    {
         exit(1);
     }
 
-    // socket creation goes here
+    // socket creation and connection handling
+    if (mode == SERVER)
+    {
+        printf("SERVER: Starting server on port %s", port);
+        netfd = initServerSock(port);
+
+        printf("SERVER: Awaiting connection...");
+        sockfd = waitForConnection(netfd);
+    }
+    else
+    {
+        printf("CLIENT: Connecting to server on %s:%s", server_ip, port);
+        sockfd = connectToServer(server_ip, port);
+    }
 
     // get max descriptor
     int maxfd = (tapfd > sockfd) ? tapfd : sockfd;
 
-    while (1) {
+    while (1)
+    {
         fd_set readFDSet;
         int ret;
 
@@ -74,7 +99,8 @@ int main(int argc, char *argv[]) {
 
         ret = select(maxfd, &readFDSet, NULL, NULL, NULL);
 
-        if (ret < 0 && errno == EINTR) {
+        if (ret < 0 && errno == EINTR)
+        {
             continue;
         }
 
@@ -83,11 +109,13 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
 
-        if(FD_ISSET(sockfd, &readFDSet)) {
+        if(FD_ISSET(sockfd, &readFDSet))
+        {
             // read from sockfd, write to tunfd
         }
 
-        if(FD_ISSET(tapfd, &readFDSet)) {
+        if(FD_ISSET(tapfd, &readFDSet))
+        {
             // read from tunfd, write to sockfd
 
             int len;
@@ -96,7 +124,6 @@ int main(int argc, char *argv[]) {
             printf("Got a packet from TUN\n");
 
             bzero(buff, BUFF_SIZE); // may be unecessary
-
         }
     }
 

@@ -15,12 +15,14 @@
 #include <errno.h>
 #include <stdarg.h>
 
-int tap_alloc(char *dev) {
+int tap_alloc(char *dev)
+{
     struct ifreq ifr;
     int tapfd, err;
     char *clonedev = "/dev/net/tun";
 
-    if ((tapfd = open(clonedev, O_RDWR)) < 0) {
+    if ((tapfd = open(clonedev, O_RDWR)) < 0)
+    {
         perror("Opening /dev/net/tun");
         return tapfd;
     }
@@ -33,7 +35,8 @@ int tap_alloc(char *dev) {
         strncpy(ifr.ifr_name, dev, IFNAMSIZ);
     }
 
-    if ((err = ioctl(tapfd, TUNSETIFF, (void *)&ifr)) < 0) {
+    if ((err = ioctl(tapfd, TUNSETIFF, (void *)&ifr)) < 0)
+    {
         perror("ioctl(TUNSETIFF)");
         close(tapfd);
         return err;
@@ -45,13 +48,15 @@ int tap_alloc(char *dev) {
 }
 
 // Initialize a server socket
-int initServerSock(unsigned short int port_number) {
+int initServerSock(unsigned short int port_number)
+{
 
     int sockfd;
     struct sockaddr_in host;
     int optval = 1;
 
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&optval, sizeof(optval)) < 0) {
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&optval, sizeof(optval)) < 0)
+    {
         perror("setsockopt()");
         exit(1);
     }
@@ -62,12 +67,14 @@ int initServerSock(unsigned short int port_number) {
     host.sin_port = htons(port_number);
 
     // using datagram, may need to use stream
-    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+    {
         perror("socket()");
         exit(1);
     }
 
-    if (bind(sockfd, (struct sockaddr *)&host, sizeof(host)) < 0) {
+    if (bind(sockfd, (struct sockaddr *)&host, sizeof(host)) < 0)
+    {
         perror("bind()");
         exit(1);
     }
@@ -76,8 +83,8 @@ int initServerSock(unsigned short int port_number) {
 }
 
 // Create a socket connection to a server
-int connectToServer(char *server_IP, unsigned short int port_number) {
-
+int connectToServer(char *server_IP, unsigned short int port_number)
+{
     int sockfd;
     struct sockaddr_in remote;
 
@@ -87,12 +94,14 @@ int connectToServer(char *server_IP, unsigned short int port_number) {
     remote.sin_addr.s_addr = inet_addr(server_IP);
     remote.sin_port = htons(port_number);
 
-    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+    {
         perror("socket()");
         exit(1);
     }
 
-    if (connect(sockfd, (struct sockaddr*) &remote, sizeof(remote)) < 0) {
+    if (connect(sockfd, (struct sockaddr*) &remote, sizeof(remote)) < 0)
+    {
         perror("connect()");
         exit(1);
     }
@@ -102,8 +111,9 @@ int connectToServer(char *server_IP, unsigned short int port_number) {
     return sockfd;
 }
 
-// Return the file descriptor of the connection
-int waitForConnection(int sockfd) {
+// Await connection from client, return the file descriptor of the connection
+int waitForConnection(int sockfd)
+{
 
     int netfd;
     struct sockaddr_in client;
@@ -111,7 +121,8 @@ int waitForConnection(int sockfd) {
 
     clientlen = sizeof(client);
     memset(&client, 0, clientlen);
-    if ((netfd = accept(sockfd, (struct sockaddr*)&client, &clientlen)) < 0) {
+    if ((netfd = accept(sockfd, (struct sockaddr*)&client, &clientlen)) < 0)
+    {
         perror("accept()");
         exit(1);
     }

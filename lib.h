@@ -1,8 +1,8 @@
 #include <errno.h>
 #include <signal.h>
 
-// Read exactly len bytes
-int read_n(int fd, char *buf, int len)
+// Read exactly len bytes, return total read or -1 if error
+static inline int read_n(int fd, char *buf, int len)
 {
     int total = 0, nread;
 
@@ -10,7 +10,7 @@ int read_n(int fd, char *buf, int len)
     {
         if ((nread = read(fd, buf, len)) < 0)
         {
-            // if system call interupt or try again, dont exit
+            // Try again
             if( errno == EINTR || errno == EAGAIN )
   	            continue;
 
@@ -28,8 +28,8 @@ int read_n(int fd, char *buf, int len)
     return total;
 }
 
-// Write exactly len bytes
-int write_n(int fd, char *buf, int len)
+// Write exactly len bytes, return total write or -1 if error
+static inline int write_n(int fd, char *buf, int len)
 {
     int total = 0, nwrite;
 
@@ -37,7 +37,7 @@ int write_n(int fd, char *buf, int len)
     {
         if ((nwrite = write(fd, buf, len)) < 0)
         {
-            // if system call interupt or try again, dont exit
+            // Try again
             if( errno == EINTR || errno == EAGAIN )
   	            continue;
 
@@ -54,3 +54,4 @@ int write_n(int fd, char *buf, int len)
 
     return total;
 }
+

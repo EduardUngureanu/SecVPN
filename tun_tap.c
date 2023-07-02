@@ -8,13 +8,13 @@
 #include <errno.h>
 #include <signal.h>
 
-
-// Create generic tun/tap interface, name of interface is stored in *dev, istun = 0 means tap and istun != 0 (usually 1) means tun
+// Create generic tun/tap interface, name of interface is stored in *dev, istun = 0 means tap and istun != 0 (usually 1) means tun, returns the open fd
 static int tun_open_generic(char *dev, int istun)
 {
     struct ifreq ifr;
     int fd;
 
+    // test if /dev/net/tun is accesible
     if ((fd = open("/dev/net/tun", O_RDWR)) < 0)
     {
        syslog(LOG_ERR, "Can't open /dev/net/tun");

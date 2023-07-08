@@ -1,3 +1,13 @@
+#define DEV_LEN 20
+
+#define DEV_TAP 0
+#define DEV_TUN 1
+
+#define PROTO_TCP 0
+#define PROTO_UDP 1
+
+#define FRAME_SIZE 2048
+
 struct generic_addr {
    char *ip;
    int port;

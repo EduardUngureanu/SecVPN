@@ -8,6 +8,9 @@
 
 #define FRAME_SIZE 2048
 
+#define FDLINK_FRAME_RESERV 128
+#define FDLINK_FRAME_APPEND 64
+
 struct generic_addr {
    char *ip;
    int port;
